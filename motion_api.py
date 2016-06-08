@@ -15,7 +15,7 @@ for f in listdir(path):
 
 files = sorted(files)
 
-print files
+#print files
 
 
 def get_file_full_path(timestamp):
@@ -25,8 +25,13 @@ def get_file_full_path(timestamp):
 def get_image_obj(timestamp):
     return Image.open(get_file_full_path(timestamp))
 
-
+count = 0
 for i in range(0, len(files) - 1):
     compared = compare_images(get_image_obj(files[i]), get_image_obj(files[i + 1]))
-    print files[i],compared
+    if float(compared) > 0.1:
+        print files[i],compared
+    else:
+        count += 1
 
+print "no motion count = %d" % count
+print "total count = %d" % len(files)
