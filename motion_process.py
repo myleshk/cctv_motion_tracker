@@ -1,4 +1,4 @@
-from os import listdir
+from os import listdir, remove
 from os.path import isfile, join
 from motion import *
 import cred
@@ -31,7 +31,7 @@ def get_image_obj(timestamp):
 def prevent_from_deletion(index):
     global toDelete
     min = index - 60 if index > 60 else 0
-    max = index+60 if index+60 < file_count else file_count
+    max = index + 60 if index + 60 < file_count else file_count
     max = index
     for i in range(min, max + 1):
         try:
@@ -57,3 +57,12 @@ for index in motionIndexes:
 
 print "No motion for %d image(s) of total %d" % (count, file_count)
 print "Delete List (count %d): \n" % len(toDelete), repr(toDelete)
+
+if len(motionIndexes) > 0:
+    print "Deleting files"
+
+    count = 0
+    for timestamp in toDelete:
+        remove(get_file_full_path(timestamp))
+        count += 1
+    print "%d files deleted" % count
