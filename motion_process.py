@@ -37,59 +37,67 @@ def filename2index(filename):
 
 
 def concat(a, b):
-    for item in a:
-        if item not in b:
-            b.append(item)
-    return b
+    assert type(a) == type(b) == list
+    return list(set(a + b))
 
 
+# Main procedure
+
+# Initiate variables
 path = cred.path
 files = []
 obsolete_files = []
 DEBUG = False
-
 suffix = '_tmp.jpg'
+files_to_delete = []
+files_with_motion = []
 
+# Search for image files and check timestamp for obsolete items
 for f in listdir(path):
     if isfile(join(path, f)) and f.find(suffix) > -1:
         if is_obsolete(f, 1800):
             obsolete_files.append(filename2index(f))
         files.append(filename2index(f))
 
+# Sort list of files and obsolete files
 files = sorted(files)
 obsolete_files = sorted(obsolete_files)
+
+# Get total count of image files to be processed
 file_count = len(files)
 
+# Debug stuff
 if DEBUG:
     print files
 
-count = 0
-files_to_delete = []
-motionIndexes = []
+no_motion_count = 0
 for i in range(0, file_count - 1):
     compared = compare_images(get_image_obj(files[i]), get_image_obj(files[i + 1]))
     if float(compared) > 0.6:
         print files[i], compared
-        motionIndexes.append(i)
+        files_with_motion.append(i)
     else:
         files_to_delete.append(files[i])
-        count += 1
+        no_motion_count += 1
 
-for index in motionIndexes:
+for index in files_with_motion:
     prevent_from_deletion(index)
 
 # TODO: backup obsolete files somewhere
 print "Obsoletes: ", len(obsolete_files)
 files_to_delete = concat(files_to_delete, obsolete_files)
 
-print "No motion for %d image(s) of total %d" % (count, file_count)
-print "Delete List (count %d): \n" % len(files_to_delete), repr(files_to_delete)
+print "No motion for %d image(s) of total %d" % (no_motion_count, file_count)
+
+# Debug
+if DEBUG:
+    print "Delete List: \n" % repr(files_to_delete)
 
 if len(files_to_delete) > 0:
     print "Deleting files"
 
-    count = 0
+    deleted_count = 0
     for timestamp in files_to_delete:
         # remove(get_file_full_path(timestamp))
-        count += 1
-    print "%d files deleted" % count
+        deleted_count += 1
+    print "%d files deleted" % deleted_count
