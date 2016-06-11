@@ -40,9 +40,9 @@ def filename2index(filename):
     return int(filename.replace(suffix, ''))
 
 
-def concat(a, b):
-    assert type(a) == type(b) == list
-    return list(set(a + b))
+# def concat(a, b):
+#     assert type(a) == type(b) == list
+#     return list(set(a + b))
 
 
 def exclude(subject, to_exclude):
@@ -108,8 +108,6 @@ for index in files_with_motion:
 # Backup valuable obsolete files somewhere
 obsolete_files = sorted(exclude(obsolete_files, files_to_delete))
 move_obsolete(obsolete_files)
-
-files_to_delete = concat(files_to_delete, obsolete_files)
 
 # Debug
 if DEBUG:
