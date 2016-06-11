@@ -1,4 +1,4 @@
-from os import listdir, remove
+from os import listdir, remove, rename
 from os.path import isfile, join
 from motion import *
 import cred
@@ -11,12 +11,16 @@ def is_obsolete(filename, delta_seconds):
     return (current_ts - ts) > (delta_seconds * 10)
 
 
-def get_file_full_path(timestamp):
+def index2full_path(timestamp):
     return path + '/' + str(timestamp) + suffix
 
 
+def index2obsolete_path(timestamp):
+    return cred.o_path + '/' + str(timestamp) + obsolete_suffix
+
+
 def get_image_obj(timestamp):
-    return Image.open(get_file_full_path(timestamp))
+    return Image.open(index2full_path(timestamp))
 
 
 def prevent_from_deletion(index):
@@ -41,6 +45,19 @@ def concat(a, b):
     return list(set(a + b))
 
 
+def exclude(subject, to_exclude):
+    assert type(subject) == type(to_exclude) == list
+    return filter(lambda x: False if x in to_exclude else True, subject)
+
+
+def move_obsolete(fs):
+    count = 0
+    for f in fs:
+        rename(index2full_path(f), index2obsolete_path(f))
+        count += 1
+    print "%d obsolete files removed" % count
+
+
 # Main procedure
 
 # Initiate variables
@@ -49,6 +66,7 @@ files = []
 obsolete_files = []
 DEBUG = False
 suffix = '_tmp.jpg'
+obsolete_suffix = '.jpg'
 files_to_delete = []
 files_with_motion = []
 
@@ -70,6 +88,7 @@ file_count = len(files)
 if DEBUG:
     print files
 
+# Motion detection
 no_motion_count = 0
 for i in range(0, file_count - 1):
     compared = compare_images(get_image_obj(files[i]), get_image_obj(files[i + 1]))
@@ -80,14 +99,17 @@ for i in range(0, file_count - 1):
         files_to_delete.append(files[i])
         no_motion_count += 1
 
+print "No motion for %d image(s) of total %d" % (no_motion_count, file_count)
+
+# Keep neighbouring images from deletion
 for index in files_with_motion:
     prevent_from_deletion(index)
 
-# TODO: backup obsolete files somewhere
-print "Obsoletes: ", len(obsolete_files)
-files_to_delete = concat(files_to_delete, obsolete_files)
+# Backup valuable obsolete files somewhere
+obsolete_files = sorted(exclude(obsolete_files, files_to_delete))
+move_obsolete(obsolete_files)
 
-print "No motion for %d image(s) of total %d" % (no_motion_count, file_count)
+files_to_delete = concat(files_to_delete, obsolete_files)
 
 # Debug
 if DEBUG:
@@ -98,6 +120,6 @@ if len(files_to_delete) > 0:
 
     deleted_count = 0
     for timestamp in files_to_delete:
-        # remove(get_file_full_path(timestamp))
+        remove(index2full_path(timestamp))
         deleted_count += 1
     print "%d files deleted" % deleted_count
