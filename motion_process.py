@@ -93,7 +93,8 @@ no_motion_count = 0
 for i in range(0, file_count - 1):
     compared = compare_images(get_image_obj(files[i]), get_image_obj(files[i + 1]))
     if float(compared) > 0.6:
-        print files[i], compared
+        if DEBUG:
+            print files[i], compared
         files_with_motion.append(i)
     else:
         files_to_delete.append(files[i])
